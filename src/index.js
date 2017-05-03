@@ -1,13 +1,25 @@
-import getNodes from './stages/get-nodes';
-import solaceRpc from './stages/solace-rpc';
-import createPipeline from 'easy-pipeline';
+#!/usr/bin/env node
 
+const aws = require('aws-sdk');
+const getNodes = require('./stages/get-nodes');
+const solaceRpc = require('./stages/solace-rpc');
+const createPipeline = require('easy-pipeline');
+const argv = require('yargs').argv;
 
-const sewage = createPipeline(getNodes, solaceRpc);
+aws.config.update({ region: 'ap-southeast-2' });
 
+const pipeline = createPipeline(getNodes.list, solaceRpc.loadNodes);
 
-let flow = setTimeout(
-  () => { sewage().fork(err => console.error(err), r => { console.log(r); flow()} ); },
-  30 * 1000
-);
+let context = { args: argv };
 
+let flow = () => {
+  setTimeout(
+    () => {
+      console.log('starting');
+      pipeline(context).fork(err => console.error(err), r => { console.log(r); flow()} );
+    },
+    3 * 1000
+  );
+};
+
+flow();

@@ -1,6 +1,6 @@
-import Task from 'data.task';
+const Task = require('data.task');
 
-export default function taskify(fn, context) {
+module.exports = (fn, context) => {
   return function() {
     const args = Array.from(arguments);
     return new Task(function(reject, resolve) {
@@ -18,5 +18,4 @@ export default function taskify(fn, context) {
       fn.apply(context, args);
     });
   };
-}
-
+};

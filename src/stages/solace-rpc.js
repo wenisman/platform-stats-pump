@@ -1,7 +1,7 @@
-import request from 'request';
-import taskify from '../shared/taskify';
-import Task from 'data.task';
-import { map } from 'ramda';
+const request = require('request');
+const taskify = require('../shared/taskify');
+const Task = require('data.task');
+const R = require('ramda');
 
 // context.props.solace => { nodeid: '10.134.48.163:8080', rpc: '<some><long><xml>' }
 // semp endpoint : 10.134.48.163:8080/SEMP
@@ -21,14 +21,16 @@ const callRpc = (addr, name) => {
 }
 
 const loadData = addr => {
-  return map(callRpc(addr), Object.getOwnPropertyNames(rpcs));
+  return R.map(callRpc(addr), Object.getOwnPropertyNames(rpcs));
 }
 
 const loadNodes = context => {
-  return map(loadData, context.solace.nodeAddrs).chain(result => {
+  return R.map(loadData, context.solace.nodeAddrs).chain(result => {
     // chuck this in a cache/log it
     return Task.of(result);
   });
 }
 
-export default loadNodes;
+module.exports = {
+  loadNodes
+};

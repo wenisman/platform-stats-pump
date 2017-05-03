@@ -1,17 +1,24 @@
-import { EC2 } from aws;
-import taskify from '../shared/taskify';
+const EC2 = require('aws-sdk').EC2;
+const taskify = require('../shared/taskify');
+const Task = require('data.task');
 
 const ec2 = new EC2();
 const describeInstances = taskify(ec2.describeInstances, ec2);
 
 
 const list = context => {
+  console.log(context);
   return describeInstances({
-    filters: [
-      { Name: 'tag', Values: `name=${context.props.args.environment}-solace` }
+    Filters: [
+      { Name: 'tag', Values: [`Environment=${context.props.args.environment}`, 'Role=Solace'] }
     ]
+  }).chain(result => {
+    console.log(result);
+    return Task.of(result);
   });
 };
 
 
-export default list;
+module.exports = {
+  list
+};
