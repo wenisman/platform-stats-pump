@@ -15,10 +15,9 @@ const rpcs = {
   message_throughput: '<rpc semp-version="soltr/7_2"><show><stats><client><detail></detail></client></stats></show></rpc>'
 }
 
-
 const callRpc = (addr, name) => {
   _context.log.debug({addr, name});
-  return post({ url: addr, body: rpcs[name], headers: { Authorization: 'Basic YWRtaW46YWRtaW4=' } })
+  return post({ url: addr, body: rpcs[name], headers: { Authorization: `Basic ${_context.props.args.authkey}` } })
     .chain(result => {
       let output = {};
       output[name] = result;

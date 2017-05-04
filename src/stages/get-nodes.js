@@ -18,8 +18,8 @@ const getIps = compose(getPrivateIp, getInstances);
 const listNodes = context => {
   return describeInstances({
     Filters: [
-      { Name: 'tag:Environment', Values: [context.props.args.environment] },
-      { Name: 'tag:Role', Values: ['Solace'] }
+      { Name: 'tag:Environment', Values: [context.props.args.environment || 'dev'] },
+      { Name: 'tag:Role', Values: [context.props.args.role || 'Solace'] }
     ]
   }).chain(result => {
     context.log.debug(result);
