@@ -3,6 +3,8 @@ const taskify = require('../shared/taskify');
 const Task = require('data.task');
 const R = require('ramda');
 
+const createPipeline = require('easy-pipeline');
+
 const post = taskify(request.post, request);
 let _context = null;
 
@@ -13,8 +15,13 @@ const rpcs = {
   message_throughput: '<rpc semp-version="soltr/7_2"><show><stats><client><detail></detail></client></stats></show></rpc>'
 }
 
+const postPipeline = () => {
+  return createPipeline(R.unnest(R.map(R.curry(callRpc)(`http://${addr}:8080/SEMP`), Object.getOwnPropertyNames(_context.props.rpcList))));
+};
+
+
 const callRpc = (addr, name) => {
-  _context.log.debug({addr, name});
+  _context.log.debug({ addr, name });
   return post({ url: addr, body: rpcs[name], headers: { Authorization: `Basic ${_context.props.args.authkey}` } })
     .chain(result => {
       let output = {};
@@ -24,13 +31,13 @@ const callRpc = (addr, name) => {
 }
 
 const loadData = addr => {
-  return R.traverse(Task.of, R.curry(callRpc)(`http://${addr}:8080/SEMP`), Object.getOwnPropertyNames(rpcs))
-  .chain(result => {
-    _context.log.debug(result);
+  return R.traverse(Task.of, R.curry(callRpc)(`http://${addr}:8080/SEMP`), Object.getOwnPropertyNames(_context.props.rpcList))
+    .chain(result => {
+      _context.log.debug(result);
       let output = {};
       output[addr] = result;
-    return Task.of(output);
-  });
+      return Task.of(output);
+    });
 }
 
 const loadNodes = context => {
