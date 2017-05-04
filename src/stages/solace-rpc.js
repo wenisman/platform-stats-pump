@@ -3,8 +3,6 @@ const taskify = require('../shared/taskify');
 const Task = require('data.task');
 const R = require('ramda');
 
-// context.props.solace => { nodeid: '10.134.48.163:8080', rpc: '<some><long><xml>' }
-// semp endpoint : 10.134.48.163:8080/SEMP
 const post = taskify(request.post, request);
 let _context = null;
 
