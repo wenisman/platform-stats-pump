@@ -1,24 +1,35 @@
-const EC2 = require('aws-sdk').EC2;
+const aws = require('aws-sdk');
 const taskify = require('../shared/taskify');
+const { compose, prop, map, pluck, unnest } = require('ramda');
 const Task = require('data.task');
 
-const ec2 = new EC2();
+aws.config.update({
+  region: process.env.AWS_REGION || 'ap-southeast-2'
+});
+
+const ec2 = new aws.EC2();
 const describeInstances = taskify(ec2.describeInstances, ec2);
 
+const getInstances = map(prop('Instances'));
+const getPrivateIp = compose(unnest, map(pluck('PrivateIpAddress')));
 
-const list = context => {
-  console.log(context);
+const getIps = compose(getPrivateIp, getInstances);
+
+const listNodes = context => {
   return describeInstances({
     Filters: [
-      { Name: 'tag', Values: [`Environment=${context.props.args.environment}`, 'Role=Solace'] }
+      { Name: 'tag:Environment', Values: [context.props.args.environment] },
+      { Name: 'tag:Role', Values: ['Solace'] }
     ]
   }).chain(result => {
-    console.log(result);
-    return Task.of(result);
+    context.log.debug(result);
+    return Task.of({ solace: { nodeAddrs: getIps(result.Reservations) } });
   });
 };
 
+listNodes.config = { name: 'list-nodes' };
+
 
 module.exports = {
-  list
+  listNodes
 };
